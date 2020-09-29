@@ -3,12 +3,12 @@
 [![API](https://img.shields.io/badge/API-14%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=14)
 
 
-`PageIndicatorView` is light library to indicate ViewPager's selected page with different animations and ability to customise it as you need.
+`SMS Parser` is helper library to receive sms by phone number or letter address.
 
 ![](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/preview_anim_drop.gif)
 
 ### **Integration**
-To add `pageindicatorview` to your project, first make sure in root `build.gradle` you have specified the following repository:
+To add `smsparser` to your project, first make sure in root `build.gradle` you have specified the following repository:
 ```groovy
     repositories {
         jcenter()
@@ -22,93 +22,79 @@ See latest library version [ ![Download](https://api.bintray.com/packages/romand
 ```groovy
 implementation 'com.romandanylyk:pageindicatorview:X.X.X'
 ```
-If your project already use `appcompat-v7` support library, you can omit `PageIndicatorView` dependencies by adding a single .aar file to your project, that will decrease total amount of methods used in your project.
 
-```groovy
-implementation 'com.romandanylyk:pageindicatorview:X.X.X@aar'
-```
-
-Keep in mind, that `PageIndicatorView` has min [API level 14](https://developer.android.com/about/dashboards/index.html) and these dependencies:
-
-```groovy
-implementation 'com.android.support:appcompat-v7:27.1.1'
-implementation 'com.android.support:recyclerview-v7:27.1.1'
-implementation 'com.android.support:support-core-ui:27.1.1'
-```
+Keep in mind, that `Sms Parser` has min [API level 23](https://developer.android.com/about/dashboards/index.html).
 
 ### **Usage Sample**
-Usage of `PageIndicatorView` is quite simple. All you need to do is to declare a view in your `layout.xml`  and call `setSelection` method to select specific indicator - that's it!
+Usage of `Sms Parser` is quite simple. All you need to do is to declare a view in your `layout.xml`  and call `setSelection` method to select specific indicator - that's it!
 
-```java
-PageIndicatorView pageIndicatorView = findViewById(R.id.pageIndicatorView);
-        pageIndicatorView.setCount(5); // specify total count of indicators
-        pageIndicatorView.setSelection(2);
-```
-
-
-But if you're as lazy as I'm - then there is another option to handle `PageIndicatorView` 
-
+1. Add permissions to your `AndroidManifest.xml`
 ```xml
-     <com.rd.PageIndicatorView
-        android:id="@+id/pageIndicatorView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        app:piv_animationType="scale"
-        app:piv_dynamicCount="true"
-        app:piv_interactiveAnimation="true"
-        app:piv_selectedColor="@color/gray_50"
-        app:piv_unselectedColor="@color/gray_300"
-        app:piv_viewPager="@id/viewPager"
-        attrs:piv_padding="12dp"
-        attrs:piv_radius="8dp" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
 ```
-All the `piv_` attributes here are specific for `PageIndicatorView` so you can customise it as you want with attributes - pretty handy. 
+2. Request permissions for your project
+```kotlin
+        private fun checkSmsPermissions() {
+        val readSmsPermissionGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_SMS
+        )
+        val receiveSmsPermissionGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECEIVE_SMS
+        )
+        if (readSmsPermissionGranted != PackageManager.PERMISSION_GRANTED ||
+            receiveSmsPermissionGranted != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestSmsPermissions()
+        } else {
+            registerSmsReceiver()
+        }
+    }
 
-But what is more important here is  `app:piv_viewPager="@id/viewPager"`.
-What it actually do is catch up your `ViewPager` and automatically handles all the event's to selected the right page - so you don't need to call `setSelection` method on your own.
+    private fun requestSmsPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.READ_SMS,
+                Manifest.permission.RECEIVE_SMS
+            ),
+            SMS_PERMISSION_CODE
+        )
+    }
 
-Another handy options here that works with your `ViewPager` as a whole is 
-`app:piv_dynamicCount="true"` and ` app:piv_interactiveAnimation="true"` 
-
-Dynamic count will automatically updates `PageIndicatorView` total count as you updates pages count in your `ViewPager` - so that's pretty useful.
-
-While interactive animation will progress the animation process within your swipe position, which makes animation more natural and responsive to end user.
-
-
-> ***Note***:  Because `setViewPagerId` uses an instance of `ViewPager`, using it in recycler could lead to id conflicts, so `PageIndicatorView` will not know properly what is the right `ViewPager` to work with. Instead you should handle selected indicators on your own programatically.
-
-
-```java
-  pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {/*empty*/}
-
-            @Override
-            public void onPageSelected(int position) {
-                pageIndicatorView.setSelection(position);
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == SMS_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                registerSmsReceiver()
+            } else {
+                Toast.makeText(this, "Autocomplete disabled", Toast.LENGTH_LONG).show()
             }
+        }
+    }
 
-            @Override
-            public void onPageScrollStateChanged(int state) {/*empty*/}
-        });
+    companion object {
+        const val SMS_PERMISSION_CODE = 101
+    }
 ```
 
+3. Registrate SmsReceiver
+```kotlin
 
-Here you can see all the animations `PageIndicatorView` support.
+    private fun registerSmsReceiver() {
+        val smsReceiver = SmsReceiver("phoneNumber or letteral address", "\\d{2}-\\d{2}") { message ->
+            firstPinView.setText(message)
+        }
 
-Name| Support version| Preview
--------- | --- | ---
-`AnimationType.NONE`| 0.0.1 | ![anim_none](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_none.gif)
-`AnimationType.COLOR`| 0.0.1 |![anim_color](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_color.gif)
-`AnimationType.SCALE`| 0.0.1 |![anim_scale](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_scale.gif)
-`AnimationType.SLIDE`| 0.0.1 |![anim_slide](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_slide.gif)
-`AnimationType.WORM`| 0.0.1 |![anim_worm](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_worm.gif)
-`AnimationType.FILL`| 0.0.6 |![anim_worm](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_fill.gif)
-`AnimationType.THIN_WORM`| 0.0.7 |![anim_thin_worm](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_thin_worm.gif)
-`AnimationType.DROP`| 0.1.0 |![anim_drop](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_drop.gif)
-`AnimationType.SWAP`| 0.1.1 |![anim_swap](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/anim_swap.gif)
-
+        val intentFilter = IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)
+        registerReceiver(smsReceiver, intentFilter)
+    }
+```
 
 ### **Release Note**
 See release notes on [github releases](https://github.com/romandanylyk/PageIndicatorView/releases) or [Bintray release notes](https://bintray.com/romandanylyk/maven/pageindicatorview#release).
