@@ -26,7 +26,7 @@ implementation 'com.romandanylyk:pageindicatorview:X.X.X'
 Keep in mind, that `Sms Parser` has min [API level 23](https://developer.android.com/about/dashboards/index.html).
 
 ### **Usage Sample**
-Usage of `Sms Parser` is quite simple. All you need to do is to declare a view in your `layout.xml`  and call `setSelection` method to select specific indicator - that's it!
+Usage of `Sms Parser` is quite simple.
 
 1. Add permissions to your `AndroidManifest.xml`
 ```xml
