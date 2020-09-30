@@ -5,7 +5,7 @@
 
 `SMS Parser` is helper library to receive sms by phone number or letter address.
 
-![](https://raw.githubusercontent.com/romandanylyk/PageIndicatorView/master/assets/preview_anim_drop.gif)
+![](https://github.com/Sergey-Kulyk/sms-parser/blob/master/ezgif.com-gif-maker%20(1).gif)
 
 ### **Integration**
 To add `smsparser` to your project, first make sure in root `build.gradle` you have specified the following repository:
