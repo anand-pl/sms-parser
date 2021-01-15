@@ -1,0 +1,3 @@
+include ':app:smsparser'
+include ':app'
+rootProject.name = "Sms Parser Sample"
